@@ -1,0 +1,39 @@
+apiVersion: skaffold/v4beta1
+kind: Config
+metadata:
+  name: simon
+
+build:
+  insecureRegistries:
+    - localhost:5000
+
+  artifacts:
+    # Nom de l'image (incluant le registre local)
+    - image: localhost:5000/nom-image
+      custom:
+        # C'est ici que la magie opère pour remplacer Docker par Nerdctl
+        # $IMAGE est une variable injectée automatiquement par Skaffold
+        buildCommand: |
+          # 1. On construit l'image
+          nerdctl build -t $IMAGE .
+          
+          # 2. On push SI Skaffold le demande
+          if $PUSH_IMAGE; then
+            nerdctl push $IMAGE --insecure-registry
+          fi
+        
+        # ici on met tous les fichiers liés à l'image
+        dependencies:
+          paths:
+            - "."
+            - "Dockerfile"
+
+        sync:
+          manual:
+          # à voir selon le dockerfile
+            
+
+deploy:
+  kubectl:
+    manifests:
+      - k8s/*.yaml

@@ -27,16 +27,11 @@ sudo install skaffold /usr/local/bin/
 rm skaffold
 
 
-# cloner le dépôt
+# stocker les credentials git pour les entrer une seule fois
 git config --global credential.helper "cache --timeout=3600"
-mkdir simon
-cd simon
 
 # cloner le frontend client
 git clone https://iut-git.unice.fr/simon/simon
-
-# cloner l'infra
-git clone https://iut-git.unice.fr/simon/infra
 
 # cloner les dépôts IOT
 mkdir iot

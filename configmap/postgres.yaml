@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgis-init-config
+data:
+  init-postgis.sh: |
+    #!/bin/bash
+    set -e
+
+    # Connexion à la DB définie par les variables d'env et création des extensions
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        CREATE EXTENSION IF NOT EXISTS postgis;
+        CREATE EXTENSION IF NOT EXISTS postgis_topology;
+        CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+        CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
+    EOSQL
+
+    # Création de l'utilisateur et de la base de données pour l'API capteur
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
+        -- Créer l'utilisateur root s'il n'existe pas
+        DO \$\$
+        BEGIN
+          IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'root') THEN
+            CREATE USER root WITH PASSWORD '$ROOT_PASSWORD';
+          END IF;
+        END
+        \$\$;
+
+        -- Créer la base de données projet_simon si elle n'existe pas
+        SELECT 'CREATE DATABASE projet_simon OWNER root'
+        WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'projet_simon')\gexec
+
+        -- Donner tous les privilèges à l'utilisateur root
+        GRANT ALL PRIVILEGES ON DATABASE projet_simon TO root;
+    EOSQL
+
+    # Activer PostGIS sur la nouvelle base de données
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname projet_simon <<-EOSQL
+        CREATE EXTENSION IF NOT EXISTS postgis;
+        CREATE EXTENSION IF NOT EXISTS postgis_topology;
+        CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+        CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
+
+        -- Donner les permissions sur le schéma public
+        GRANT ALL ON SCHEMA public TO root;
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO root;
+        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO root;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO root;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO root;
+    EOSQL

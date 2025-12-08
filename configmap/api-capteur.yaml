@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-capteur-config
+data:
+  DB_HOST: "postgis"
+  DB_PORT: "5432"
+  DB_USERNAME: "root"
+  DB_PASSWORD: "root"
+  DB_DATABASE: "projet_simon"
+  PORT: "3000"

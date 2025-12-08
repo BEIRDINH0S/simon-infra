@@ -1,39 +1,62 @@
-apiVersion: skaffold/v4beta1
+apiVersion: skaffold/v4beta7
 kind: Config
+
 metadata:
-  name: simon
+  name: api-capteur-dev
 
 build:
-  insecureRegistries:
-    - localhost:5000
-
+  # On active le push vers la registry locale
+  local:
+    push: true 
   artifacts:
-    # Nom de l'image (incluant le registre local)
-    - image: localhost:5000/nom-image
+    - image: localhost:5000/api-capteur # Adapte avec l'adresse de ta registry locale si besoin
+      # Contexte : Chemin vers le dossier contenant ton code Node.js et ton Dockerfile
+      context: ../APIs/api-capteur 
       custom:
-        # C'est ici que la magie opère pour remplacer Docker par Nerdctl
-        # $IMAGE est une variable injectée automatiquement par Skaffold
+        # Commande pour build avec docker
         buildCommand: |
-          # 1. On construit l'image
-          nerdctl build -t $IMAGE .
-          
-          # 2. On push SI Skaffold le demande
-          if $PUSH_IMAGE; then
-            nerdctl push $IMAGE --insecure-registry
-          fi
-        
-        # ici on met tous les fichiers liés à l'image
+          docker build -t $IMAGE -t localhost:5000/api-capteur:latest .
+          docker push $IMAGE
+          docker push localhost:5000/api-capteur:latest
         dependencies:
           paths:
-            - "."
-            - "Dockerfile"
+            - src/**/*
+            - package.json
+            - tsconfig.json # Si tu utilises TypeScript
+            - Dockerfile
+      
+      # Configuration du Hot Reload (File Sync)
+      sync:
+        manual:
+          # On synchronise tout ce qui est dans src local vers /app/src dans le conteneur
+          # Adapte '/app' selon le WORKDIR de ton Dockerfile
+          - src: 'src/**/*.ts'
+            dest: /app
+            strip: ''
+          - src: 'src/**/*.js'
+            dest: /app
+            strip: ''
+          - src: 'package.json'
+            dest: /app/package.json
 
-        sync:
-          manual:
-          # à voir selon le dockerfile
-            
+manifests:
+  rawYaml:
+    - configmap/*.yaml
+    - secret/*.yaml
+    - statefulset/*.yaml
+    - deployment/*.yaml
+    - service/*.yaml
 
 deploy:
-  kubectl:
-    manifests:
-      - k8s/*.yaml
+  kubectl: {}
+
+# Port forwarding automatique pour accéder à tes services
+portForward:
+  - resourceType: service
+    resourceName: api-capteur-service
+    port: 3000 # Le port exposé par ton service Node
+    localPort: 3000
+  - resourceType: service
+    resourceName: postgis
+    port: 5432
+    localPort: 5432

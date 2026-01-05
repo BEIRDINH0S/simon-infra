@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgis
+spec:
+  serviceName: "postgis"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgis
+  template:
+    metadata:
+      labels:
+        app: postgis
+    spec:
+      containers:
+      - name: postgis
+        # Image communautaire officielle avec PostGIS pré-installé
+        image: postgis/postgis:16-3.4
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_DB
+          value: "mabasegeo"
+        - name: POSTGRES_USER
+          value: "geo_user"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: ROOT_PASSWORD
+        # Resources pour production
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        # Vérifications de santé (Healthchecks)
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "geo_user", "-d", "mabasegeo"]
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command: ["pg_isready", "-U", "geo_user", "-d", "mabasegeo"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        volumeMounts:
+        - name: postgis-data
+          mountPath: /var/lib/postgresql/data
+        # Montage du script d'init défini dans le ConfigMap
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: init-script
+        configMap:
+          name: postgis-init-config
+
+  # Demande de volume persistant (PVC) - Storage augmenté pour prod
+  volumeClaimTemplates:
+  - metadata:
+      name: postgis-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 20Gi

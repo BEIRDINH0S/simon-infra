@@ -1,0 +1,15 @@
+créer la config kube pour le déploiement en prod (ingress, etc...)
+
+créer les pipelines pour build & push les images sur docker hub
+
+intégrer argocd au cluster de prod pour watch les images et gérer les déploiements
+
+intégrer prometheus cluster de prod
+
+rajouter le frontend
+
+Maybe : 
+
+arborescence pas folle mais potable pour l'instant (pas de domain driven)
+
+refaire documentation en incluant helm, et argocd

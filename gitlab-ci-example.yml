@@ -1,0 +1,60 @@
+# Exemple de .gitlab-ci.yml pour le repo api-capteur
+# Copier ce fichier vers /home/erwan/simon/APIs/api-capteur/.gitlab-ci.yml
+
+stages:
+  - build
+
+variables:
+  # Ces variables doivent être configurées dans GitLab:
+  # Settings → CI/CD → Variables
+  # - DOCKER_USERNAME (votre username Docker Hub)
+  # - DOCKER_PASSWORD (votre password Docker Hub)
+  IMAGE_NAME: $DOCKER_USERNAME/api-capteur
+
+build-and-push:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    # Installer Node.js pour lire package.json
+    - apk add --no-cache nodejs npm
+
+    # Récupérer la version depuis package.json
+    - export VERSION=$(node -p "require('./package.json').version")
+    - echo "Building version $VERSION"
+
+    # Build l'image avec la version et latest
+    - docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest .
+
+    # Push vers Docker Hub
+    - docker push $IMAGE_NAME:$VERSION
+    - docker push $IMAGE_NAME:latest
+
+    - echo "✅ Image pushed successfully!"
+    - echo "   - $IMAGE_NAME:$VERSION"
+    - echo "   - $IMAGE_NAME:latest"
+  only:
+    - main
+    - develop
+  tags:
+    - docker
+
+# Optionnel: Build sans push pour les autres branches
+build-test:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - apk add --no-cache nodejs npm
+    - export VERSION=$(node -p "require('./package.json').version")
+    - docker build -t $IMAGE_NAME:test-$CI_COMMIT_SHORT_SHA .
+    - echo "✅ Build test OK (not pushed)"
+  except:
+    - main
+    - develop
+  tags:
+    - docker

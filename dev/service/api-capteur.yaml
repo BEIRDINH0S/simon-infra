@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-capteur-service
+spec:
+  selector:
+    # Ce sélecteur doit correspondre aux labels du Deployment ci-dessus
+    app: api-capteur
+  
+  # Type de service :
+  # ClusterIP : Accessible uniquement à l'intérieur du cluster (Défaut)
+  # NodePort : Accessible via l'IP d'un nœud + un port haut (pour dev)
+  # LoadBalancer : Pour avoir une IP publique (si supporté par votre cloud)
+  type: ClusterIP 
+  
+  ports:
+    - protocol: TCP
+      port: 3000      # Le port exposé par le Service (interne au cluster)
+      targetPort: 3000 # Le port de votre conteneur (celui du Dockerfile)

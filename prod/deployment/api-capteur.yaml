@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-capteur-deployment
+  labels:
+    app: api-capteur
+spec:
+  # Nombre de copies de votre application (Pods) - augmenté pour prod
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-capteur
+  template:
+    metadata:
+      labels:
+        app: api-capteur
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for postgres to be ready..."
+          until nc -z -w 2 postgis.default.svc.cluster.local 5432 2>/dev/null; do
+            echo "Postgres not ready, waiting..."
+            sleep 2
+          done
+          echo "Postgres is ready!"
+      containers:
+      - name: api-capteur-container
+        # Image depuis Docker Hub - sera mis à jour par ArgoCD Image Updater
+        image: DOCKER_USERNAME/api-capteur:v1.0.0
+
+        # IfNotPresent pour prod (pas de pull à chaque restart)
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - containerPort: 3000
+
+        # Resources pour production
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        # Variables d'environnement
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: api-capteur-config
+              key: NODE_ENV
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: api-capteur-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: api-capteur-config
+              key: DB_PORT
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: api-capteur-config
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: ROOT_PASSWORD
+        - name: DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: api-capteur-config
+              key: DB_DATABASE
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: api-capteur-config
+              key: PORT
+
+        # Health checks activés pour prod
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10

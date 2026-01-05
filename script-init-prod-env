@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# Vérifier qu'on n'est PAS root (minikube ne peut pas tourner en root avec docker driver)
+if [ "$EUID" -eq 0 ]; then
+    echo "❌ Erreur: Ne pas exécuter ce script avec sudo"
+    echo "   Exécutez: ./script-init-prod-env"
+    echo "   (Le script demandera sudo uniquement quand nécessaire)"
+    exit 1
+fi
+
+# Vérifier et installer Docker
+if ! command -v docker &> /dev/null; then
+    echo "Installation de Docker (nécessite sudo)..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    rm get-docker.sh
+    echo "Docker installé."
+fi
+
+# Ajouter l'utilisateur au groupe docker si nécessaire
+if ! groups | grep -q docker; then
+    echo "Ajout de l'utilisateur au groupe docker (nécessite sudo)..."
+    sudo usermod -aG docker $USER
+    echo "⚠️  Vous devez vous déconnecter/reconnecter ou exécuter: newgrp docker"
+    echo "   Puis relancer ce script"
+    exit 0
+fi
+
+# Installer minikube si non présent
+if ! command -v minikube &> /dev/null; then
+    echo "Installation de minikube (nécessite sudo)..."
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    rm minikube-linux-amd64
+    echo "Minikube installé."
+fi
+
+# Démarrer minikube avec un profil spécifique pour prod (SANS sudo)
+echo "Démarrage de minikube (profil prod)..."
+minikube start --profile prod --driver=docker --cpus=2 --memory=3072mb
+
+# Configurer kubectl pour le profil prod
+minikube profile prod
+
+# Configurer kubectl pour utiliser minikube (et pas k3s)
+export KUBECONFIG=~/.kube/config
+minikube update-context --profile prod
+
+# Installer Helm si non présent
+if ! command -v helm &> /dev/null; then
+    echo "Installation de Helm (nécessite sudo)..."
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sudo bash
+    echo "Helm installé."
+fi
+
+# Ajouter les repos Helm nécessaires
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+# Créer namespace pour ArgoCD
+kubectl create namespace argocd --context prod
+
+# Installer ArgoCD via Helm
+helm install argocd argo/argo-cd \
+  --kube-context prod \
+  --namespace argocd \
+  --set server.service.type=NodePort \
+  --wait
+
+# Installer ArgoCD Image Updater via Helm
+helm install argocd-image-updater argo/argocd-image-updater \
+  --kube-context prod \
+  --namespace argocd \
+  --wait
+
+# Récupérer le mot de passe admin initial d'ArgoCD
+echo "ArgoCD installé. Mot de passe admin initial:"
+kubectl --context prod -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+echo ""
+
+# Exposer ArgoCD UI
+echo "Exposer ArgoCD UI sur http://localhost:8080"
+kubectl --context prod port-forward svc/argocd-server -n argocd 8080:443 &
+
+# Créer namespace pour monitoring
+kubectl --context prod create namespace monitoring
+
+echo "Setup production terminé!"
+echo "ArgoCD UI: http://localhost:8080"
+echo "Username: admin"
+echo "Utilisez ArgoCD pour déployer Prometheus et vos applications."

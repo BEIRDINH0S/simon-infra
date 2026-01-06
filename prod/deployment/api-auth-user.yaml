@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-auth-user-deployment
+  labels:
+    app: api-auth-user
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-auth-user
+  template:
+    metadata:
+      labels:
+        app: api-auth-user
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for postgres to be ready..."
+          until nc -z -w 2 postgis.default.svc.cluster.local 5432 2>/dev/null; do
+            echo "Postgres not ready, waiting..."
+            sleep 2
+          done
+          echo "Postgres is ready!"
+      containers:
+      - name: api-auth-user-container
+        image: localhost:5000/api-auth-user:latest
+        imagePullPolicy: Always
+
+        ports:
+        - containerPort: 3002
+
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: api-auth-user-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: api-auth-user-config
+              key: DB_PORT
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: api-auth-user-config
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: api-auth-user-config
+              key: DB_PASSWORD
+        - name: DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: api-auth-user-config
+              key: DB_DATABASE
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: api-auth-user-config
+              key: PORT

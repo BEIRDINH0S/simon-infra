@@ -2,42 +2,68 @@ apiVersion: skaffold/v4beta7
 kind: Config
 
 metadata:
-  name: api-capteur-dev
+  name: simon-dev
 
 build:
-  # On active le push vers la registry locale
   local:
-    push: true 
+    push: true
   artifacts:
-    - image: localhost:5000/api-capteur # Adapte avec l'adresse de ta registry locale si besoin
-      # Contexte : Chemin vers le dossier contenant ton code Node.js et ton Dockerfile
-      context: ../../APIs/api-capteur 
-      custom:
-        # Commande pour build avec docker
-        buildCommand: |
-          docker build -t $IMAGE -t localhost:5000/api-capteur:latest .
-          docker push $IMAGE
-          docker push localhost:5000/api-capteur:latest
-        dependencies:
-          paths:
-            - src/**/*
-            - package.json
-            - tsconfig.json # Si tu utilises TypeScript
-            - Dockerfile
-      
-      # Configuration du Hot Reload (File Sync)
+    - image: localhost:5000/api-capteur
+      context: ../../APIs/api-capteur
+      docker:
+        dockerfile: Dockerfile
       sync:
         manual:
-          # On synchronise tout ce qui est dans src local vers /app/src dans le conteneur
-          # Adapte '/app' selon le WORKDIR de ton Dockerfile
           - src: 'src/**/*.ts'
             dest: /app
-            strip: ''
           - src: 'src/**/*.js'
             dest: /app
-            strip: ''
           - src: 'package.json'
             dest: /app/package.json
+
+    - image: localhost:5000/api-ingestion
+      context: ../../APIs/api-ingestion
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: /app
+          - src: 'src/**/*.js'
+            dest: /app
+          - src: 'package.json'
+            dest: /app/package.json
+
+    - image: localhost:5000/api-auth-user
+      context: ../../APIs/api-auth-user
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: /app
+          - src: 'src/**/*.js'
+            dest: /app
+          - src: 'package.json'
+            dest: /app/package.json
+
+    - image: localhost:5000/api-gateway-client
+      context: ../../APIs/api-gateway-client
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'
+            dest: /app
+          - src: 'src/**/*.js'
+            dest: /app
+          - src: 'package.json'
+            dest: /app/package.json
+
+    - image: localhost:5000/frontend
+      context: ../../simon
+      docker:
+        dockerfile: Dockerfile
 
 manifests:
   rawYaml:
@@ -54,8 +80,24 @@ deploy:
 portForward:
   - resourceType: service
     resourceName: api-capteur-service
-    port: 3000 # Le port exposé par ton service Node
+    port: 3000
     localPort: 3000
+  - resourceType: service
+    resourceName: api-ingestion-service
+    port: 3001
+    localPort: 3001
+  - resourceType: service
+    resourceName: api-auth-user-service
+    port: 3002
+    localPort: 3002
+  - resourceType: service
+    resourceName: api-gateway-client-service
+    port: 3003
+    localPort: 3003
+  - resourceType: service
+    resourceName: frontend-service
+    port: 80
+    localPort: 8080
   - resourceType: service
     resourceName: postgis
     port: 5432

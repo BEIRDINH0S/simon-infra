@@ -29,7 +29,7 @@ spec:
           echo "Postgres is ready!"
       containers:
       - name: api-auth-user-container
-        image: localhost:5000/api-auth-user:latest
+        image: beirdinhos/api-auth-user:latest
         imagePullPolicy: Always
 
         ports:

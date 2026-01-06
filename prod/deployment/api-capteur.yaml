@@ -31,10 +31,10 @@ spec:
       containers:
       - name: api-capteur-container
         # Image depuis Docker Hub - sera mis à jour par ArgoCD Image Updater
-        image: DOCKER_USERNAME/api-capteur:v1.0.0
+        image: beirdinhos/api-capteur:latest
 
-        # IfNotPresent pour prod (pas de pull à chaque restart)
-        imagePullPolicy: IfNotPresent
+        # Always pour prod afin de détecter les nouvelles images
+        imagePullPolicy: Always
 
         ports:
         - containerPort: 3000

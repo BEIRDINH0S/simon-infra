@@ -29,7 +29,7 @@ spec:
           echo "Postgres is ready!"
       containers:
       - name: api-gateway-client-container
-        image: localhost:5000/api-gateway-client:latest
+        image: beirdinhos/api-gateway-client:latest
         imagePullPolicy: Always
 
         ports:

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: frontend-container
-        image: localhost:5000/frontend:latest
+        image: beirdinhos/frontend:latest
         imagePullPolicy: Always
 
         ports:

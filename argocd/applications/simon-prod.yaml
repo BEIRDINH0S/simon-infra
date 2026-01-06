@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: simon-prod
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Configuration ArgoCD Image Updater pour surveiller toutes les images Docker Hub
+    argocd-image-updater.argoproj.io/image-list: >
+      api-capteur=beirdinhos/api-capteur:latest,
+      api-auth-user=beirdinhos/api-auth-user:latest,
+      api-ingestion=beirdinhos/api-ingestion:latest,
+      api-gateway-client=beirdinhos/api-gateway-client:latest,
+      frontend=beirdinhos/frontend:latest
+    # Stratégie de mise à jour: surveiller le digest SHA256 pour le tag latest
+    argocd-image-updater.argoproj.io/api-capteur.update-strategy: digest
+    argocd-image-updater.argoproj.io/api-auth-user.update-strategy: digest
+    argocd-image-updater.argoproj.io/api-ingestion.update-strategy: digest
+    argocd-image-updater.argoproj.io/api-gateway-client.update-strategy: digest
+    argocd-image-updater.argoproj.io/frontend.update-strategy: digest
+    # Méthode write-back: mettre à jour directement dans ArgoCD (pas besoin de secret Git)
+    argocd-image-updater.argoproj.io/write-back-method: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://iut-git.unice.fr/simon/infra
+    targetRevision: HEAD
+    path: prod
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - Validate=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Ignorer les différences dans les annotations managedFields
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      jsonPointers:
+        - /spec/volumeClaimTemplates

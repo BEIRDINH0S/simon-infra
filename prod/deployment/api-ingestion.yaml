@@ -29,7 +29,7 @@ spec:
           echo "Postgres is ready!"
       containers:
       - name: api-ingestion-container
-        image: localhost:5000/api-ingestion:latest
+        image: beirdinhos/api-ingestion:latest
         imagePullPolicy: Always
 
         ports:

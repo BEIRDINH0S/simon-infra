@@ -14,41 +14,83 @@ echo ""
 
 sudo apt update
 
-# installer docker si non présent ou non fonctionnel
-if ! docker ps &> /dev/null; then
-    echo "Docker n'est pas disponible ou ne fonctionne pas. Installation..."
+echo "Installation de Docker Engine dans WSL2..."
 
-    # Vérifier si on est sur WSL
-    if grep -qi microsoft /proc/version; then
-        echo "ATTENTION: Vous êtes sur WSL 2."
-        echo "Il est recommandé d'utiliser Docker Desktop avec l'intégration WSL 2."
-        echo "Téléchargez-le depuis: https://www.docker.com/products/docker-desktop"
-        echo ""
-        read -p "Voulez-vous quand même installer Docker directement dans WSL ? (y/N) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Installation annulée. Installez Docker Desktop et réexécutez ce script."
+# Vérifier si Docker Engine est déjà installé localement dans WSL
+if [ -f /usr/bin/dockerd ]; then
+    echo "Docker Engine déjà installé."
+
+    # Vérifier si Docker tourne
+    if ! docker ps &> /dev/null; then
+        echo "Démarrage de Docker Engine..."
+        sudo service docker start
+        sleep 3
+
+        if ! docker ps &> /dev/null; then
+            echo "ERREUR: Impossible de démarrer Docker."
+            echo "Vérifiez que vous êtes dans le groupe docker avec: groups"
+            echo "Si 'docker' n'apparaît pas, déconnectez-vous et reconnectez-vous."
             exit 1
         fi
     fi
+    echo "Docker Engine fonctionne correctement."
+else
+    echo "Installation de Docker Engine dans WSL2..."
 
+    # Nettoyage des anciennes installations
+    sudo apt-get remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+
+    # Installation via le script officiel Docker
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
     rm get-docker.sh
-    echo "Docker installé."
+    echo "Docker Engine installé."
 
     # Ajouter l'utilisateur actuel au groupe docker
     sudo usermod -aG docker $USER
-    echo "Vous avez été ajouté au groupe docker. Vous devrez peut-être vous reconnecter."
+    echo "Vous avez été ajouté au groupe docker."
 
     # Démarrer le service Docker
     sudo service docker start
 
+    # Vérifier que Docker démarre correctement
+    echo "Vérification du démarrage de Docker..."
+    sleep 3
+    if ! sudo docker ps &> /dev/null; then
+        echo "ERREUR: Docker ne démarre pas correctement."
+        echo "Vérifiez les logs avec: sudo journalctl -u docker"
+        exit 1
+    fi
+
     echo ""
-    echo "IMPORTANT: Vous devez vous reconnecter pour que les changements prennent effet."
-    echo "Après reconnexion, réexécutez ce script."
+    echo "======================================"
+    echo "IMPORTANT: Configuration des permissions"
+    echo "======================================"
+    echo "Vous devez vous DÉCONNECTER et RECONNECTER à votre session WSL"
+    echo "pour que les changements de groupe docker prennent effet."
+    echo ""
+    echo "Pour vous déconnecter de WSL, dans PowerShell/CMD Windows:"
+    echo "  wsl --shutdown"
+    echo "Puis rouvrez WSL et réexécutez:"
+    echo "  ./infra/script-init-dev-env"
+    echo ""
     exit 0
 fi
+
+# S'assurer qu'on utilise bien le socket Docker local et pas celui de Docker Desktop
+export DOCKER_HOST=unix:///var/run/docker.sock
+
+# Vérifier qu'on utilise bien Docker Engine local
+DOCKER_INFO=$(docker info 2>/dev/null | grep "Operating System" || echo "")
+if [[ "$DOCKER_INFO" == *"Docker Desktop"* ]]; then
+    echo "ATTENTION: Le contexte Docker pointe vers Docker Desktop."
+    echo "Pour utiliser Docker Engine dans WSL2, désactivez l'intégration WSL2 dans Docker Desktop:"
+    echo "  Settings > Resources > WSL Integration > Décochez votre distribution"
+    echo "Puis redémarrez WSL avec: wsl --shutdown (dans PowerShell Windows)"
+    exit 1
+fi
+
+echo "Docker Engine local (WSL2) utilisé correctement."
 
 # configurer docker pour le registry local
 mkdir -p ~/.docker
@@ -67,7 +109,21 @@ sudo install minikube-linux-amd64 /usr/local/bin/minikube
 rm minikube-linux-amd64
 
 # démarrer minikube avec docker driver et profil dev
-minikube start -p dev --driver=docker
+# Configuration optimisée pour WSL2 + Docker Engine
+echo "Démarrage de minikube (cela peut prendre quelques minutes)..."
+
+# S'assurer que minikube utilise Docker Engine local
+export DOCKER_HOST=unix:///var/run/docker.sock
+
+minikube start -p dev \
+  --driver=docker \
+  --container-runtime=docker \
+  --cpus=2 \
+  --memory=3072 \
+  --wait=all \
+  --wait-timeout=10m
+
+echo "Minikube démarré avec Docker Engine local."
 
 # installer kubectl
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"

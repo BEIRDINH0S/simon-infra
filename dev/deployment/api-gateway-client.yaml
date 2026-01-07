@@ -58,8 +58,8 @@ spec:
             configMapKeyRef:
               name: api-gateway-client-config
               key: PORT
-        - name: AUTH_SERVICE_URL
+        - name: AUTH_USER_SERVICE_URL
           valueFrom:
             configMapKeyRef:
               name: api-gateway-client-config
-              key: AUTH_SERVICE_URL
+              key: AUTH_USER_SERVICE_URL

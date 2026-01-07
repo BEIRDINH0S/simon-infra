@@ -4,4 +4,4 @@ metadata:
   name: api-gateway-client-config
 data:
   PORT: "3003"
-  AUTH_SERVICE_URL: "http://api-auth-user-service:3002/api/v1"
+  AUTH_USER_SERVICE_URL: "http://api-auth-user-service:3002/api/v1"

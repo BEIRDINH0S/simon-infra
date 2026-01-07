@@ -25,8 +25,8 @@ if [ "$MINIKUBE_STATUS" != "Running" ]; then
     minikube start -p dev \
         --driver=docker \
         --container-runtime=docker \
-        --cpus=4 \
-        --memory=8192 \
+        --cpus=2 \
+        --memory=6144 \
         --wait=all --wait-timeout=5m
 else
     echo "✓ Minikube déjà démarré"

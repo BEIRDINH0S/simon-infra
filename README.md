@@ -2,47 +2,72 @@
 
 Infrastructure Kubernetes pour le projet Simon avec support dev et prod.
 
-## Prérequis
-- WSL (Windows Subsystem for Linux)
-- Ubuntu Server 24.04 dans WSL
-- Docker
-- Minikube
-- Kubectl
-
----
-
 ## Environnement de développement
 
 ### Installation initiale
 
-#### 1. Connexion en tant que root
-```bash
-sudo su - root
-```
+Le script `script-init-dev-env` effectue une installation complète de l'environnement de développement. **Attention** : ce script est destiné à une première installation uniquement.
 
-#### 2. Création du dossier de travail
-```bash
-mkdir simon
-cd simon
-```
+#### Étape 1 : Récupération du script
 
-#### 3. Récupération du dépôt
 ```bash
+# Cloner uniquement le dépôt infra pour obtenir le script
 git config --global credential.helper "cache --timeout=3600"
 git clone https://iut-git.unice.fr/simon/infra
 ```
 
-#### 4. Lancement du script d'installation dev
+#### Étape 2 : Lancement du script d'installation
+
+**IMPORTANT** : Ne pas exécuter en tant que root
+
 ```bash
 chmod +x ./infra/script-init-dev-env
 ./infra/script-init-dev-env
 ```
 
-Le script installe :
-- Docker
-- Minikube (profil dev)
-- Kubectl
-- Skaffold pour le développement continu
+#### Ce que fait le script
+
+1. **Clone tous les dépôts Git** dans `~/simon-dev/`
+   - `infra/` : Configurations Kubernetes et scripts
+   - `simon/` : Frontend Next.js
+   - `APIs/` : 6 microservices (api-capteur, api-ingestion, api-auth-user, api-gateway-client, service-ingestion-bdd, api-sensor-data)
+
+2. **Installe Docker Engine** dans WSL2
+   - Installation via le script officiel Docker
+   - Configuration du groupe docker
+   - Démarrage du service Docker
+
+3. **Installe et configure Minikube**
+   - Profil `dev` avec driver Docker
+   - 4 CPUs, 8 Go RAM
+   - Active le registry Minikube sur 127.0.0.1:5000
+
+4. **Installe les outils de développement**
+   - `kubectl` : CLI Kubernetes
+   - `Skaffold` : Développement continu avec hot-reload
+
+#### Note importante sur les permissions Docker
+
+Si c'est votre première installation Docker, vous devrez vous déconnecter et reconnecter à WSL pour que les permissions du groupe docker prennent effet :
+
+```bash
+# Dans PowerShell/CMD Windows
+wsl --shutdown
+
+# Puis rouvrir WSL et relancer le script
+./infra/script-init-dev-env
+```
+
+#### Démarrage après installation
+
+Une fois l'installation terminée :
+
+```bash
+cd ~/simon-dev/infra
+./start-dev.sh
+cd dev
+skaffold dev
+```
 
 ---
 

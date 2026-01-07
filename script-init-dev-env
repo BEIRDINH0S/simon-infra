@@ -197,8 +197,8 @@ export DOCKER_HOST=unix:///var/run/docker.sock
 minikube start -p dev \
   --driver=docker \
   --container-runtime=docker \
-  --cpus=4 \
-  --memory=8192 \
+  --cpus=2 \
+  --memory=6144 \
   --wait=all \
   --wait-timeout=10m
 
@@ -235,6 +235,49 @@ minikube update-context -p dev
 curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
 sudo install skaffold /usr/local/bin/
 rm skaffold
+
+# Nettoyage des fichiers temporaires et déchets
+echo ""
+echo "======================================"
+echo "Nettoyage des fichiers temporaires"
+echo "======================================"
+echo ""
+
+# Supprimer le dossier infra cloné au mauvais endroit (si existant)
+if [ -d "$HOME/infra" ] && [ "$HOME/infra" != "$WORK_DIR/infra" ]; then
+    echo "Suppression du dossier infra en double à $HOME/infra..."
+    rm -rf "$HOME/infra"
+    echo "✓ Dossier infra en double supprimé"
+fi
+
+# Nettoyer les déchets de minikube des anciennes installations
+if [ -d "$HOME/.minikube" ]; then
+    # Compter seulement les profils existants (pas 'dev' car on vient de le créer)
+    OLD_PROFILES=$(minikube profile list 2>/dev/null | grep -v "dev" | grep -v "Profile" | grep -v "^\s*$" | wc -l || echo "0")
+
+    if [ "$OLD_PROFILES" -eq 0 ]; then
+        # Calculer la taille avant nettoyage
+        OLD_SIZE=$(du -sh "$HOME/.minikube" 2>/dev/null | awk '{print $1}')
+        echo "Nettoyage du cache minikube (taille actuelle: $OLD_SIZE)..."
+
+        # Nettoyer le cache et les fichiers inutiles, en gardant le profil 'dev'
+        rm -rf "$HOME/.minikube/cache" 2>/dev/null || true
+        rm -rf "$HOME/.minikube/logs" 2>/dev/null || true
+
+        # Supprimer les anciens profils/machines qui ne sont pas 'dev'
+        if [ -d "$HOME/.minikube/machines" ]; then
+            find "$HOME/.minikube/machines" -mindepth 1 -maxdepth 1 -type d ! -name "dev" -exec rm -rf {} \; 2>/dev/null || true
+        fi
+        if [ -d "$HOME/.minikube/profiles" ]; then
+            find "$HOME/.minikube/profiles" -mindepth 1 -maxdepth 1 -type d ! -name "dev" -exec rm -rf {} \; 2>/dev/null || true
+        fi
+
+        NEW_SIZE=$(du -sh "$HOME/.minikube" 2>/dev/null | awk '{print $1}')
+        echo "✓ Cache nettoyé (taille après: $NEW_SIZE, profil dev conservé)"
+    fi
+fi
+
+echo "✓ Nettoyage terminé"
 
 echo ""
 echo "======================================"

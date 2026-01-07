@@ -5,3 +5,5 @@ metadata:
 data:
   PORT: "3003"
   AUTH_USER_SERVICE_URL: "http://api-auth-user-service:3002/api/v1"
+  SENSOR_DATA_SERVICE_BASE_URL: "http://api-sensor-data-service:3006/api/v1"
+  SENSOR_SERVICE_BASE_URL: "http://api-capteur-service:3000/api/v1"

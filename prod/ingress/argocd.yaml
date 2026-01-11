@@ -4,9 +4,19 @@ metadata:
   name: argocd-server-ingress
   namespace: argocd
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    # Redirection automatique HTTP vers HTTPS
+    traefik.ingress.kubernetes.io/router.middlewares: argocd-redirect-https@kubernetescrd
+    # Cert-manager génère automatiquement le certificat Let's Encrypt
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # ArgoCD nécessite cette config pour fonctionner derrière un reverse proxy
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 spec:
   ingressClassName: traefik
+  tls:
+  - hosts:
+    - simon-prod.uksouth.cloudapp.azure.com
+    secretName: argocd-server-tls-cert
   rules:
   - host: simon-prod.uksouth.cloudapp.azure.com
     http:

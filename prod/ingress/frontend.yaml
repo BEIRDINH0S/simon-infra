@@ -4,9 +4,16 @@ metadata:
   name: frontend-ingress
   namespace: default
   annotations:
-    traefik.ingress.kubernetes.io/ssl-redirect: "false"
+    # Redirection automatique HTTP vers HTTPS
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
+    # Cert-manager génère automatiquement le certificat Let's Encrypt
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: traefik
+  tls:
+  - hosts:
+    - simon-prod.uksouth.cloudapp.azure.com
+    secretName: frontend-tls-cert
   rules:
   - host: simon-prod.uksouth.cloudapp.azure.com
     http:

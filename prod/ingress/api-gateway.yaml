@@ -4,9 +4,8 @@ metadata:
   name: api-gateway-ingress
   namespace: default
   annotations:
-    # Redirection automatique HTTP vers HTTPS
-    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
-    traefik.ingress.kubernetes.io/rewrite-target: /$2
+    # Redirection automatique HTTP vers HTTPS + Strip prefix /api
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd,default-api-strip-prefix@kubernetescrd
     # Cert-manager génère automatiquement le certificat Let's Encrypt
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
@@ -19,8 +18,8 @@ spec:
   - host: simon-prod.uksouth.cloudapp.azure.com
     http:
       paths:
-      - path: /api(/|$)(.*)
-        pathType: ImplementationSpecific
+      - path: /api
+        pathType: Prefix
         backend:
           service:
             name: api-gateway-client-service

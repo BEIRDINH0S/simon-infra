@@ -21,7 +21,7 @@ data:
         DO \$\$
         BEGIN
           IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'prod_user') THEN
-            CREATE USER prod_user WITH PASSWORD '$ROOT_PASSWORD';
+            CREATE USER prod_user WITH PASSWORD 'prod_password';
           END IF;
         END
         \$\$;

@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: api-gateway-ingress
+  name: api-gateway-swagger-ingress
   namespace: default
   annotations:
-    # Redirection automatique HTTP vers HTTPS
-    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
+    # Redirection automatique HTTP vers HTTPS + Strip prefix /api pour swagger
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd,default-api-strip-prefix@kubernetescrd
     # Cert-manager génère automatiquement le certificat Let's Encrypt
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
@@ -18,8 +18,8 @@ spec:
   - host: simon-prod.uksouth.cloudapp.azure.com
     http:
       paths:
-      # Routes API sans strip (car elles ont déjà /api/v1 dans le code)
-      - path: /api/v1
+      # Swagger uniquement - strip /api pour accéder à /swagger
+      - path: /api/swagger
         pathType: Prefix
         backend:
           service:

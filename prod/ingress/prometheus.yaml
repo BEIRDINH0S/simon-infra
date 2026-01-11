@@ -4,9 +4,16 @@ metadata:
   name: prometheus-ingress
   namespace: monitoring
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    # Redirection automatique HTTP vers HTTPS
+    traefik.ingress.kubernetes.io/router.middlewares: monitoring-redirect-https@kubernetescrd
+    # Cert-manager génère automatiquement le certificat Let's Encrypt
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: traefik
+  tls:
+  - hosts:
+    - simon-prod.uksouth.cloudapp.azure.com
+    secretName: prometheus-tls-cert
   rules:
   - host: simon-prod.uksouth.cloudapp.azure.com
     http:

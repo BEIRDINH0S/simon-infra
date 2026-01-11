@@ -6,6 +6,6 @@ data:
   DB_HOST: "postgis"
   DB_PORT: "5432"
   DB_USERNAME: "prod_user"
+  DB_PASSWORD: "prod_password"
   DB_DATABASE: "projet_simon_prod"
   PORT: "3000"
-  NODE_ENV: "production"

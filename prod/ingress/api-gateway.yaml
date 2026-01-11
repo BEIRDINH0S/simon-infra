@@ -2,17 +2,18 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: api-gateway-ingress
-  namespace: default
+  namespace: simon-prod
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: simon-prod-api-stripprefix@kubernetescrd
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
-  ingressClassName: traefik
+  ingressClassName: nginx
   rules:
   - host: simon-prod.uksouth.cloudapp.azure.com
     http:
       paths:
-      - path: /api
-        pathType: Prefix
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: api-gateway-client-service

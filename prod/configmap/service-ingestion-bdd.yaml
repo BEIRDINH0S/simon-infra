@@ -3,7 +3,6 @@ kind: ConfigMap
 metadata:
   name: service-ingestion-bdd-config
 data:
-  NODE_ENV: "production"
   PORT: "3004"
   KAFKA_BROKER: "kafka:9092"
   CASSANDRA_HOSTS: "cassandra"

@@ -3,9 +3,13 @@ kind: ConfigMap
 metadata:
   name: api-ingestion-config
 data:
-  NODE_ENV: "production"
   DB_HOST: "postgis"
   DB_PORT: "5432"
-  DB_USERNAME: "root"
-  DB_DATABASE: "projet_simon"
+  DB_USERNAME: "prod_user"
+  DB_PASSWORD: "prod_password"
+  DB_DATABASE: "projet_simon_prod"
   PORT: "3001"
+  KAFKA_BROKER: "kafka:9092"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  CAPTEUR_SERVICE_BASE_URL: "http://api-capteur-service:3000/api/v1"

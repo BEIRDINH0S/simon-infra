@@ -3,9 +3,7 @@ kind: ConfigMap
 metadata:
   name: api-gateway-client-config
 data:
-  NODE_ENV: "production"
-  DB_HOST: "postgis"
-  DB_PORT: "5432"
-  DB_USERNAME: "root"
-  DB_DATABASE: "projet_simon"
   PORT: "3003"
+  AUTH_USER_SERVICE_URL: "http://api-auth-user-service:3002/api/v1"
+  SENSOR_DATA_SERVICE_BASE_URL: "http://api-sensor-data-service:3006/api/v1"
+  SENSOR_SERVICE_BASE_URL: "http://api-capteur-service:3000/api/v1"

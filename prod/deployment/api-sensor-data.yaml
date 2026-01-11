@@ -5,7 +5,7 @@ metadata:
   labels:
     app: api-sensor-data
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: api-sensor-data
@@ -27,6 +27,13 @@ spec:
             sleep 5
           done
           echo "Keyspace 'capteur_data' is ready!"
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "10m"
+          limits:
+            memory: "32Mi"
+            cpu: "50m"
       imagePullSecrets:
       - name: dockerhub-secret
       containers:
@@ -39,18 +46,15 @@ spec:
 
         resources:
           requests:
-            cpu: 100m
-            memory: 256Mi
+            memory: "128Mi"
+            cpu: "100m"
           limits:
-            cpu: 500m
-            memory: 512Mi
+            memory: "256Mi"
+            cpu: "200m"
 
         env:
         - name: NODE_ENV
-          valueFrom:
-            configMapKeyRef:
-              name: api-sensor-data-config
-              key: NODE_ENV
+          value: "production"
         - name: CASSANDRA_HOSTS
           valueFrom:
             configMapKeyRef:
@@ -66,16 +70,3 @@ spec:
             configMapKeyRef:
               name: api-sensor-data-config
               key: PORT
-
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 3006
-          initialDelaySeconds: 10
-          periodSeconds: 5
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 3006
-          initialDelaySeconds: 30
-          periodSeconds: 10

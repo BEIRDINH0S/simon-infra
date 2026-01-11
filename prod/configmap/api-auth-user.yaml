@@ -3,9 +3,9 @@ kind: ConfigMap
 metadata:
   name: api-auth-user-config
 data:
-  NODE_ENV: "production"
   DB_HOST: "postgis"
   DB_PORT: "5432"
-  DB_USERNAME: "root"
-  DB_DATABASE: "projet_simon"
+  DB_USERNAME: "prod_user"
+  DB_PASSWORD: "prod_password"
+  DB_DATABASE: "projet_simon_prod"
   PORT: "3002"

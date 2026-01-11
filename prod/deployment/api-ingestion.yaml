@@ -5,7 +5,7 @@ metadata:
   labels:
     app: api-ingestion
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api-ingestion
@@ -27,6 +27,52 @@ spec:
             sleep 2
           done
           echo "Postgres is ready!"
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "10m"
+          limits:
+            memory: "32Mi"
+            cpu: "50m"
+
+      - name: wait-for-redis
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for redis to be ready..."
+          until nc -z -w 2 redis.default.svc.cluster.local 6379 2>/dev/null; do
+            echo "Redis not ready, waiting..."
+            sleep 2
+          done
+          echo "Redis is ready!"
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "10m"
+          limits:
+            memory: "32Mi"
+            cpu: "50m"
+      - name: wait-for-capteur
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for api-capteur to be ready..."
+          until nc -z -w 2 api-capteur-service.default.svc.cluster.local 3000 2>/dev/null; do
+            echo "API Capteur not ready, waiting..."
+            sleep 2
+          done
+          echo "API Capteur is ready!"
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "10m"
+          limits:
+            memory: "32Mi"
+            cpu: "50m"
       imagePullSecrets:
       - name: dockerhub-secret
       containers:
@@ -36,6 +82,14 @@ spec:
 
         ports:
         - containerPort: 3001
+
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
 
         env:
         - name: NODE_ENV
@@ -57,8 +111,8 @@ spec:
               key: DB_USERNAME
         - name: DB_PASSWORD
           valueFrom:
-            secretKeyRef:
-              name: app-credentials
+            configMapKeyRef:
+              name: api-ingestion-config
               key: DB_PASSWORD
         - name: DB_DATABASE
           valueFrom:
@@ -70,3 +124,23 @@ spec:
             configMapKeyRef:
               name: api-ingestion-config
               key: PORT
+        - name: KAFKA_BROKER
+          valueFrom:
+            configMapKeyRef:
+              name: api-ingestion-config
+              key: KAFKA_BROKER
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: api-ingestion-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: api-ingestion-config
+              key: REDIS_PORT
+        - name: CAPTEUR_SERVICE_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: api-ingestion-config
+              key: CAPTEUR_SERVICE_BASE_URL

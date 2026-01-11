@@ -2,9 +2,11 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: frontend-ingress
-  namespace: default
+  namespace: simon-prod
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
-  ingressClassName: traefik
+  ingressClassName: nginx
   rules:
   - host: simon-prod.uksouth.cloudapp.azure.com
     http:

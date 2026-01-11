@@ -5,8 +5,8 @@ metadata:
   labels:
     app: api-capteur
 spec:
-  # Nombre de copies de votre application (Pods) - augmenté pour prod
-  replicas: 3
+  # Nombre de copies de votre application (Pods)
+  replicas: 1
   selector:
     matchLabels:
       app: api-capteur
@@ -28,35 +28,38 @@ spec:
             sleep 2
           done
           echo "Postgres is ready!"
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "10m"
+          limits:
+            memory: "32Mi"
+            cpu: "50m"
       imagePullSecrets:
       - name: dockerhub-secret
       containers:
       - name: api-capteur-container
-        # Image depuis Docker Hub - sera mis à jour par ArgoCD Image Updater
+        # Image built by Skaffold from the custom build command
         image: beirdinhos/api-capteur:latest
 
-        # Always pour prod afin de détecter les nouvelles images
+        # Force Kubernetes à retélécharger l'image si vous utilisez le tag 'latest'
         imagePullPolicy: Always
 
         ports:
-        - containerPort: 3000
+        - containerPort: 3000 # Doit matcher le EXPOSE 3000 du Dockerfile
 
-        # Resources pour production
         resources:
           requests:
-            cpu: 100m
-            memory: 256Mi
+            memory: "128Mi"
+            cpu: "100m"
           limits:
-            cpu: 500m
-            memory: 512Mi
+            memory: "256Mi"
+            cpu: "200m"
 
         # Variables d'environnement
         env:
         - name: NODE_ENV
-          valueFrom:
-            configMapKeyRef:
-              name: api-capteur-config
-              key: NODE_ENV
+          value: "production"
         - name: DB_HOST
           valueFrom:
             configMapKeyRef:
@@ -74,9 +77,9 @@ spec:
               key: DB_USERNAME
         - name: DB_PASSWORD
           valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: ROOT_PASSWORD
+            configMapKeyRef:
+              name: api-capteur-config
+              key: DB_PASSWORD
         - name: DB_DATABASE
           valueFrom:
             configMapKeyRef:
@@ -88,16 +91,10 @@ spec:
               name: api-capteur-config
               key: PORT
 
-        # Health checks activés pour prod
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 3000
-          initialDelaySeconds: 10
-          periodSeconds: 5
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
+        # (Optionnel mais recommandé) Vérifie que l'app répond
+        # livenessProbe:
+        #   httpGet:
+        #     path: / # ou /health si vous avez une route de santé
+        #     port: 3000
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 5

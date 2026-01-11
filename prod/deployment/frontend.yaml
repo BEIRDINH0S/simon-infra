@@ -5,7 +5,7 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -18,11 +18,19 @@ spec:
       - name: dockerhub-secret
       containers:
       - name: frontend-container
-        image: beirdinhos/simon:latest
+        image: beirdinhos/frontend:latest
         imagePullPolicy: Always
 
         ports:
         - containerPort: 80
+
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
 
         env:
         - name: NODE_ENV

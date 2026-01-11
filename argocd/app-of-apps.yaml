@@ -9,7 +9,7 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/BEIRDINH0S/simon-infra
+    repoURL: https://iut-git.unice.fr/simon/infra
     targetRevision: HEAD
     # Pointer vers le dossier contenant les Applications ArgoCD
     path: argocd/applications

@@ -6,32 +6,28 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    # Liste complète des images à surveiller avec leurs alias
+    # Configuration ArgoCD Image Updater pour surveiller toutes les images Docker Hub
     argocd-image-updater.argoproj.io/image-list: >
-      api-capteur=beirdinhos/api-capteur,
-      api-auth-user=beirdinhos/api-auth-user,
-      api-ingestion=beirdinhos/api-ingestion,
-      api-gateway-client=beirdinhos/api-gateway-client,
-      frontend=beirdinhos/frontend,
-      api-sensor-data=beirdinhos/api-sensor-data,
-      service-ingestion-bdd=beirdinhos/service-ingestion-bdd
-    
-    # Stratégie de mise à jour "semver" par défaut pour toutes les images (plus robuste que "latest")
-    argocd-image-updater.argoproj.io/update-strategy: semver
-
-    # Méthode de mise à jour : commit dans le dépôt Git (GitOps pur)
-    argocd-image-updater.argoproj.io/write-back-method: git
-    # Secret pour l'authentification Git
-    argocd-image-updater.argoproj.io/git-creds: git-creds
+      api-capteur=beirdinhos/api-capteur:latest,
+      api-auth-user=beirdinhos/api-auth-user:latest,
+      api-ingestion=beirdinhos/api-ingestion:latest,
+      api-gateway-client=beirdinhos/api-gateway-client:latest,
+      frontend=beirdinhos/frontend:latest
+    # Stratégie de mise à jour: surveiller le digest SHA256 pour le tag latest
+    argocd-image-updater.argoproj.io/api-capteur.update-strategy: digest
+    argocd-image-updater.argoproj.io/api-auth-user.update-strategy: digest
+    argocd-image-updater.argoproj.io/api-ingestion.update-strategy: digest
+    argocd-image-updater.argoproj.io/api-gateway-client.update-strategy: digest
+    argocd-image-updater.argoproj.io/frontend.update-strategy: digest
+    # Méthode write-back: mettre à jour directement dans ArgoCD (pas besoin de secret Git)
+    argocd-image-updater.argoproj.io/write-back-method: argocd
 spec:
   project: default
 
   source:
-    repoURL: https://github.com/BEIRDINH0S/simon-infra
+    repoURL: https://iut-git.unice.fr/simon/infra
     targetRevision: HEAD
     path: prod
-    directory:
-      recurse: true
 
   destination:
     server: https://kubernetes.default.svc

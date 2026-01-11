@@ -3,7 +3,6 @@ kind: ConfigMap
 metadata:
   name: api-sensor-data-config
 data:
-  NODE_ENV: "production"
   PORT: "3006"
   CASSANDRA_HOSTS: "cassandra"
   CASSANDRA_KEYSPACE: "sensor_data"

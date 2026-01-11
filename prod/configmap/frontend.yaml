@@ -3,5 +3,4 @@ kind: ConfigMap
 metadata:
   name: frontend-config
 data:
-  NODE_ENV: "production"
   API_GATEWAY_URL: "http://api-gateway-client-service:3003"

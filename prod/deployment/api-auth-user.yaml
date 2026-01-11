@@ -5,7 +5,7 @@ metadata:
   labels:
     app: api-auth-user
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api-auth-user
@@ -27,6 +27,13 @@ spec:
             sleep 2
           done
           echo "Postgres is ready!"
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "10m"
+          limits:
+            memory: "32Mi"
+            cpu: "50m"
       imagePullSecrets:
       - name: dockerhub-secret
       containers:
@@ -36,6 +43,14 @@ spec:
 
         ports:
         - containerPort: 3002
+
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
 
         env:
         - name: NODE_ENV
@@ -57,8 +72,8 @@ spec:
               key: DB_USERNAME
         - name: DB_PASSWORD
           valueFrom:
-            secretKeyRef:
-              name: app-credentials
+            configMapKeyRef:
+              name: api-auth-user-config
               key: DB_PASSWORD
         - name: DB_DATABASE
           valueFrom:

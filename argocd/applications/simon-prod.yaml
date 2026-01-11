@@ -12,7 +12,7 @@ metadata:
       api-auth-user=beirdinhos/api-auth-user:latest,
       api-ingestion=beirdinhos/api-ingestion:latest,
       api-gateway-client=beirdinhos/api-gateway-client:latest,
-      frontend=beirdinhos/frontend:latest
+      frontend=beirdinhos/simon:latest
     # Stratégie de mise à jour: surveiller le digest SHA256 pour le tag latest
     argocd-image-updater.argoproj.io/api-capteur.update-strategy: digest
     argocd-image-updater.argoproj.io/api-auth-user.update-strategy: digest

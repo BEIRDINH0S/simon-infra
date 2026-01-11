@@ -34,8 +34,6 @@ spec:
           limits:
             memory: "32Mi"
             cpu: "50m"
-      imagePullSecrets:
-      - name: dockerhub-secret
       containers:
       - name: api-sensor-data-container
         image: beirdinhos/api-sensor-data:latest

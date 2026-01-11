@@ -73,8 +73,6 @@ spec:
           limits:
             memory: "32Mi"
             cpu: "50m"
-      imagePullSecrets:
-      - name: dockerhub-secret
       containers:
       - name: api-ingestion-container
         image: beirdinhos/api-ingestion:latest

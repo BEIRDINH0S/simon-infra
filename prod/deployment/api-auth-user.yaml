@@ -34,8 +34,6 @@ spec:
           limits:
             memory: "32Mi"
             cpu: "50m"
-      imagePullSecrets:
-      - name: dockerhub-secret
       containers:
       - name: api-auth-user-container
         image: beirdinhos/api-auth-user:latest

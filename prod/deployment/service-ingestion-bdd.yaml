@@ -35,8 +35,6 @@ spec:
           limits:
             memory: "32Mi"
             cpu: "50m"
-      imagePullSecrets:
-      - name: dockerhub-secret
       containers:
       - name: service-ingestion-bdd-container
         image: beirdinhos/service-ingestion-bdd:latest

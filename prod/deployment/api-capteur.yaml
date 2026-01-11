@@ -35,8 +35,6 @@ spec:
           limits:
             memory: "32Mi"
             cpu: "50m"
-      imagePullSecrets:
-      - name: dockerhub-secret
       containers:
       - name: api-capteur-container
         # Image built by Skaffold from the custom build command

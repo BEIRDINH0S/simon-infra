@@ -1,0 +1,26 @@
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: simon-prod-images
+  namespace: argocd
+spec:
+  applicationRef:
+    name: simon-prod
+  images:
+    - image: beirdinhos/api-capteur
+      tag: latest
+      updateStrategy: digest
+    - image: beirdinhos/api-auth-user
+      tag: latest
+      updateStrategy: digest
+    - image: beirdinhos/api-ingestion
+      tag: latest
+      updateStrategy: digest
+    - image: beirdinhos/api-gateway-client
+      tag: latest
+      updateStrategy: digest
+    - image: beirdinhos/simon
+      tag: latest
+      updateStrategy: digest
+  updateStrategy:
+    type: argocd

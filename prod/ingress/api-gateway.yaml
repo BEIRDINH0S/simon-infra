@@ -18,6 +18,14 @@ spec:
   - host: simon-prod.uksouth.cloudapp.azure.com
     http:
       paths:
+      # Route spécifique pour l'API d'ingestion (doit être avant /api/v1)
+      - path: /api/v1/ingestion
+        pathType: Prefix
+        backend:
+          service:
+            name: api-ingestion-service
+            port:
+              number: 3001
       # Routes API sans strip (car elles ont déjà /api/v1 dans le code)
       - path: /api/v1
         pathType: Prefix

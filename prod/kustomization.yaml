@@ -1,0 +1,57 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # ConfigMaps
+  - configmap/api-auth-user.yaml
+  - configmap/api-capteur.yaml
+  - configmap/api-gateway-client.yaml
+  - configmap/api-ingestion.yaml
+  - configmap/api-sensor-data.yaml
+  - configmap/frontend.yaml
+  - configmap/postgres.yaml
+  - configmap/service-ingestion-bdd.yaml
+
+  # Deployments
+  - deployment/api-auth-user.yaml
+  - deployment/api-capteur.yaml
+  - deployment/api-gateway-client.yaml
+  - deployment/api-ingestion.yaml
+  - deployment/api-sensor-data.yaml
+  - deployment/frontend.yaml
+  - deployment/redis.yaml
+  - deployment/service-ingestion-bdd.yaml
+
+  # Services
+  - service/api-auth-user.yaml
+  - service/api-capteur.yaml
+  - service/api-gateway-client.yaml
+  - service/api-ingestion.yaml
+  - service/api-sensor-data.yaml
+  - service/cassandra.yaml
+  - service/frontend.yaml
+  - service/postgres.yaml
+  - service/redis.yaml
+  - service/service-ingestion-bdd.yaml
+
+  # StatefulSets
+  - statefulset/cassandra.yaml
+  - statefulset/postgres.yaml
+
+  # Ingress
+  - ingress/api-gateway.yaml
+  - ingress/api-gateway-swagger.yaml
+  - ingress/api-gateway-stripprefix-middleware.yaml
+  - ingress/argocd.yaml
+  - ingress/argocd-middleware.yaml
+  - ingress/frontend.yaml
+  - ingress/grafana.yaml
+  - ingress/prometheus.yaml
+
+  # Cert Manager
+  - cert-manager/letsencrypt-prod.yaml
+  - cert-manager/https-redirect-middleware.yaml
+
+  # Secrets
+  - secret/credentials-template.yaml
+  - secret/postgres-template.yaml
